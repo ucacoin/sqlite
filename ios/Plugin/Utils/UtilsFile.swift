@@ -1,8 +1,9 @@
 //
 //  UtilsFile.swift
-//  CapacitorCommunitySqlite
+//  Plugin
 //
-//  Created by  Quéau Jean Pierre on 15/10/2020.
+//  Created by  Quéau Jean Pierre on 18/01/2021.
+//  Copyright © 2021 Max Lynch. All rights reserved.
 //
 
 import Foundation
@@ -16,11 +17,12 @@ enum UtilsFileError: Error {
     case getDatabasesURLFailed
     case getApplicationPathFailed
     case getApplicationURLFailed
+    case getLibraryPathFailed
+    case getLibraryURLFailed
     case getFileListFailed
     case copyFromAssetToDatabaseFailed
     case copyFromNamesFailed
 }
-
 // swiftlint:disable type_body_length
 class UtilsFile {
 
@@ -48,7 +50,7 @@ class UtilsFile {
         do {
             let filePath: String =
                 try UtilsFile.getFilePath(
-                                    fileName: fileName)
+                    fileName: fileName)
             ret = UtilsFile.isFileExist(filePath: filePath)
             return ret
         } catch UtilsFileError.getFilePathFailed {
@@ -63,7 +65,7 @@ class UtilsFile {
     class func getFilePath(fileName: String) throws -> String {
         do {
             let url = try getDatabasesURL()
-                return url.appendingPathComponent("\(fileName)").path
+            return url.appendingPathComponent("\(fileName)").path
         } catch UtilsFileError.getDatabasesURLFailed {
             print("Error: getDatabasesURL Failed")
             throw UtilsFileError.getFilePathFailed
@@ -84,7 +86,6 @@ class UtilsFile {
     }
 
     // MARK: - getDatabasesPath
-
     class func getDatabasesPath() throws -> String {
         if let path: String = NSSearchPathForDirectoriesInDomains(
             .documentDirectory, .userDomainMask, true
@@ -122,6 +123,32 @@ class UtilsFile {
         }
     }
 
+    // MARK: - getLibraryURL
+
+    class func getLibraryURL() throws -> URL {
+        if let path: String = NSSearchPathForDirectoriesInDomains(
+            .libraryDirectory, .userDomainMask, true
+        ).first {
+            return NSURL(fileURLWithPath: path) as URL
+        } else {
+            print("Error: getApplicationURL did not find the library folder")
+            throw UtilsFileError.getLibraryURLFailed
+        }
+    }
+
+    // MARK: - getLibraryPath
+
+    class func getLibraryPath() throws -> String {
+        if let path: String = NSSearchPathForDirectoriesInDomains(
+            .libraryDirectory, .userDomainMask, true
+        ).first {
+            return path
+        } else {
+            print("Error: getApplicationPath did not find the library folder")
+            throw UtilsFileError.getLibraryPathFailed
+        }
+    }
+
     // MARK: - GetAssetsDatabasesPath
 
     class func getAssetsDatabasesPath() throws -> URL {
@@ -156,7 +183,7 @@ class UtilsFile {
         do {
             var dbs: [String] = []
             let filenames = try FileManager.default
-                                    .contentsOfDirectory(atPath: path)
+                .contentsOfDirectory(atPath: path)
             let ext: String = ".db"
             for file in filenames {
                 if file.hasSuffix(ext) {
@@ -198,10 +225,10 @@ class UtilsFile {
     class func copyFromAssetToDatabase(fromDb: String, toDb: String) throws {
         do {
             let uAsset: URL = try getAssetsDatabasesPath()
-                                        .appendingPathComponent(fromDb)
+                .appendingPathComponent(fromDb)
             let pAsset: String = uAsset.path
             let uDb: URL = try getDatabasesURL()
-                                        .appendingPathComponent(toDb)
+                .appendingPathComponent(toDb)
             let pDb: String = uDb.path
             let bRet: Bool = try copyFile(pathName: pAsset, toPathName: pDb)
             if bRet {
@@ -241,8 +268,8 @@ class UtilsFile {
                                              toPath: toPathName)
                     return true
                 } catch let error {
-                       print("Error: \(error)")
-                       throw UtilsFileError.copyFileFailed
+                    print("Error: \(error)")
+                    throw UtilsFileError.copyFileFailed
                 }
             } else {
                 print("Error: CopyFilePath Failed pathName does not exist")
@@ -257,7 +284,7 @@ class UtilsFile {
     // MARK: - CopyFile
 
     class func copyFile(fileName: String, toFileName: String)
-                                                    throws -> Bool {
+    throws -> Bool {
         var ret: Bool = false
         do {
             let fromPath: String = try getFilePath(fileName: fileName)
@@ -329,7 +356,7 @@ class UtilsFile {
     // MARK: - RenameFile
 
     class func renameFile (filePath: String, toFilePath: String)
-                            throws {
+    throws {
         let fileManager = FileManager.default
         do {
             if isFileExist(filePath: toFilePath) {
